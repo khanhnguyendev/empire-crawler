@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 8000;
 const botToken = process.env.BOT_TOKEN || config.bot.token;
 const chatId = process.env.CHAT_ID || config.bot.chatId;
 let lastBonus = 0;
-
+  
 //connect to db
 mongoose.connect(process.env.DB_URI || config.db.uri);
 
@@ -33,45 +33,46 @@ app.use(express.urlencoded({ extended: true }));
 app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
 
-app.get("/api/empire/", async (req, res) => {
-    try {
-      let totalsBonus = 0;
-      let totalsT = 0;
-      let totalsCT = 0;
-  
-      // Get the total count of logs in the database
-      const endIndex = await EmpireSchema.countDocuments();
-      let startIndex = 0;
-      if (endIndex > 120) {
-        startIndex = endIndex - 120;
-      }
-  
-      const latestLogs = await EmpireSchema.find()
-        .skip(startIndex)
-        .limit(endIndex);
-  
-      latestLogs.forEach((log) => {
-        if (log._doc.coin == "coin-t") {
-          totalsT += 1;
-        }
-        if (log._doc.coin == "coin-ct") {
-          totalsCT += 1;
-        }
-        if (log._doc.coin == "coin-bonus") {
-          totalsBonus += 1;
-        }
-      });
-  
-      res.render("index", {
-        logs: latestLogs,
-        totalsT: totalsT,
-        totalsCT: totalsCT,
-        totalsBonus: totalsBonus,
-      });
-    } catch (err) {
-      console.error(err);
-      res.status(500).send("Error retrieving logs from database");
+app.get("/", async (req, res) => {
+
+  try {
+    let totalsBonus = 0;
+    let totalsT = 0;
+    let totalsCT = 0;
+
+    // Get the total count of logs in the database
+    const endIndex = await EmpireSchema.countDocuments();
+    let startIndex = 0;
+    if (endIndex > 120) {
+      startIndex = endIndex - 120;
     }
+
+    const latestLogs = await EmpireSchema.find()
+      .skip(startIndex)
+      .limit(endIndex);
+
+    latestLogs.forEach((log) => {
+      if (log._doc.coin == "coin-t") {
+        totalsT += 1;
+      }
+      if (log._doc.coin == "coin-ct") {
+        totalsCT += 1;
+      }
+      if (log._doc.coin == "coin-bonus") {
+        totalsBonus += 1;
+      }
+    });
+
+    res.render("index", {
+      logs: latestLogs,
+      totalsT: totalsT,
+      totalsCT: totalsCT,
+      totalsBonus: totalsBonus,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error retrieving logs from database");
+  }
 });
 
 async function crawler() {
